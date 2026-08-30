@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>계명대 약학대학 편의점</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #0d7a6b;
+    --teal-light: #15a88f;
+    --teal-pale: #e6f7f4;
+    --navy: #0f2d4a;
+    --navy-mid: #1a4060;
+    --accent: #f5a623;
+    --accent-soft: #fff5e0;
+    --red: #e03b3b;
+    --red-soft: #fff0f0;
+    --gray-50: #f8fafb;
+    --gray-100: #f0f4f6;
+    --gray-200: #dde4ea;
+    --gray-400: #8fa3b1;
+    --gray-600: #4a6272;
+    --gray-800: #1e3040;
+    --white: #ffffff;
+    --radius: 14px;
+    --shadow: 0 4px 24px rgba(15,45,74,0.10);
+    --shadow-lg: 0 12px 48px rgba(15,45,74,0.16);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--gray-50); color: var(--gray-800); min-height: 100vh; }
+
+  /* Loading overlay */
+  #global-loading {
+    position: fixed; inset: 0; background: rgba(15,45,74,0.55);
+    backdrop-filter: blur(6px); z-index: 9999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  }
+  #global-loading.hidden { display: none; }
+  .spinner {
+    width: 44px; height: 44px;
+    border: 4px solid rgba(255,255,255,0.2);
+    border-top-color: var(--teal-light);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #global-loading p { color: #fff; font-size: 14px; font-weight: 600; }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .topbar {
+    background: var(--navy); padding: 0 24px; height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-logo { display: flex; align-items: center; gap: 10px; color: var(--white); }
+  .topbar-logo .pill {
+    background: var(--teal); color: #fff; font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px;
+  }
+  .topbar-logo span { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+  .topbar-actions { display: flex; gap: 8px; }
+  .btn-ghost {
+    background: rgba(255,255,255,0.1); border: none; color: #fff; font-family: inherit;
+    font-size: 13px; font-weight: 500; padding: 6px 14px; border-radius: 8px;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.2); }
+
+  .student-container { max-width: 680px; margin: 0 auto; padding: 24px 16px 120px; }
+  .info-card { background: var(--white); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); margin-bottom: 20px; }
+  .section-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.2px;
+    text-transform: uppercase; color: var(--teal); margin-bottom: 14px;
+  }
+  .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .input-group { display: flex; flex-direction: column; gap: 6px; }
+  .input-group label { font-size: 12px; font-weight: 600; color: var(--gray-600); }
+  .input-group input {
+    border: 1.5px solid var(--gray-200); border-radius: 10px; padding: 11px 14px;
+    font-family: inherit; font-size: 14px; font-weight: 500; color: var(--gray-800);
+    background: var(--gray-50); outline: none; transition: border 0.2s, box-shadow 0.2s;
+  }
+  .input-group input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(13,122,107,0.12); background: #fff; }
+
+  .category-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; scrollbar-width: none; }
+  .category-tabs::-webkit-scrollbar { display: none; }
+  .cat-tab {
+    white-space: nowrap; border: 1.5px solid var(--gray-200); background: var(--white);
+    color: var(--gray-600); font-family: inherit; font-size: 13px; font-weight: 600;
+    padding: 7px 16px; border-radius: 30px; cursor: pointer; transition: all 0.18s; flex-shrink: 0;
+  }
+  .cat-tab:hover { border-color: var(--teal); color: var(--teal); }
+  .cat-tab.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+  .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+  .product-card {
+    background: var(--white); border-radius: var(--radius); padding: 18px 16px;
+    box-shadow: var(--shadow); cursor: pointer; border: 2px solid transparent;
+    transition: all 0.18s; position: relative;
+  }
+  .product-card:hover { border-color: var(--teal-light); transform: translateY(-2px); }
+  .product-card.selected { border-color: var(--teal); background: var(--teal-pale); }
+  .product-cat-badge {
+    font-size: 10px; font-weight: 700; color: var(--teal); background: var(--teal-pale);
+    padding: 2px 7px; border-radius: 6px; display: inline-block; margin-bottom: 8px; letter-spacing: 0.3px;
+  }
+  .product-name { font-size: 15px; font-weight: 700; color: var(--gray-800); margin-bottom: 4px; line-height: 1.3; }
+  .product-price { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; color: var(--teal); }
+  .qty-control { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .qty-btn {
+    width: 28px; height: 28px; border-radius: 8px; border: none; background: var(--teal); color: #fff;
+    font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; line-height: 1; transition: background 0.15s;
+  }
+  .qty-btn:hover { background: var(--navy); }
+  .qty-num { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 700; color: var(--navy); min-width: 20px; text-align: center; }
+
+  .cart-footer {
+    position: fixed; bottom: 0; left: 0; right: 0; background: var(--white);
+    border-top: 1.5px solid var(--gray-200); padding: 16px 20px; z-index: 99;
+    box-shadow: 0 -8px 32px rgba(15,45,74,0.10);
+  }
+  .cart-footer-inner { max-width: 680px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .cart-total-info { display: flex; flex-direction: column; }
+  .cart-total-label { font-size: 11px; font-weight: 600; color: var(--gray-400); letter-spacing: 0.5px; }
+  .cart-total-amount { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 700; color: var(--navy); }
+  .btn-submit {
+    background: var(--teal); color: #fff; border: none; font-family: inherit; font-size: 15px;
+    font-weight: 700; padding: 14px 28px; border-radius: 12px; cursor: pointer; transition: all 0.18s; white-space: nowrap;
+  }
+  .btn-submit:hover { background: var(--navy); transform: scale(1.02); }
+  .btn-submit:disabled { background: var(--gray-200); color: var(--gray-400); cursor: not-allowed; transform: none; }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(10,25,40,0.6);
+    backdrop-filter: blur(4px); z-index: 200; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--white); border-radius: 20px; padding: 32px; max-width: 440px; width: 100%;
+    box-shadow: var(--shadow-lg); animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-title { font-size: 20px; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
+  .modal-sub { font-size: 13px; color: var(--gray-600); margin-bottom: 24px; }
+  .order-summary-list { background: var(--gray-50); border-radius: 12px; padding: 16px; margin-bottom: 20px; max-height: 200px; overflow-y: auto; }
+  .order-summary-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 14px; border-bottom: 1px solid var(--gray-100); }
+  .order-summary-item:last-child { border-bottom: none; }
+  .order-summary-item .item-name { font-weight: 600; color: var(--gray-800); }
+  .order-summary-item .item-qty { color: var(--gray-400); font-size: 12px; margin-left: 4px; }
+  .order-summary-item .item-subtotal { font-family: 'DM Mono', monospace; font-weight: 600; color: var(--teal); }
+  .account-box {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+    border-radius: 14px; padding: 20px; margin-bottom: 20px; color: #fff; position: relative; overflow: hidden;
+  }
+  .account-box::before {
+    content: ''; position: absolute; top: -30px; right: -30px;
+    width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.05);
+  }
+  .account-label { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: rgba(255,255,255,0.6); margin-bottom: 4px; }
+  .account-bank { font-size: 13px; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+  .account-number { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 700; letter-spacing: 1px; color: #fff; margin-bottom: 4px; }
+  .account-holder { font-size: 13px; color: rgba(255,255,255,0.75); }
+  .total-final { display: flex; justify-content: space-between; align-items: center; background: var(--accent-soft); border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; }
+  .total-final .lbl { font-size: 13px; font-weight: 700; color: var(--gray-600); }
+  .total-final .amt { font-family: 'DM Mono', monospace; font-size: 24px; font-weight: 700; color: var(--navy); }
+  .modal-actions { display: flex; gap: 10px; }
+  .btn-cancel { flex: 1; background: var(--gray-100); border: none; font-family: inherit; font-size: 14px; font-weight: 700; padding: 14px; border-radius: 12px; cursor: pointer; color: var(--gray-600); transition: background 0.2s; }
+  .btn-cancel:hover { background: var(--gray-200); }
+  .btn-confirm { flex: 2; background: var(--teal); border: none; font-family: inherit; font-size: 14px; font-weight: 700; padding: 14px; border-radius: 12px; cursor: pointer; color: #fff; transition: background 0.2s; }
+  .btn-confirm:hover { background: var(--navy); }
+  .btn-confirm:disabled { background: var(--gray-400); cursor: not-allowed; }
+
+  .success-screen { text-align: center; padding: 40px 0 20px; }
+  .success-icon { width: 72px; height: 72px; background: var(--teal-pale); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+  .success-title { font-size: 22px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+  .success-sub { font-size: 14px; color: var(--gray-600); line-height: 1.6; margin-bottom: 24px; }
+
+  .admin-container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+  .admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+  .admin-title { font-size: 24px; font-weight: 800; color: var(--navy); letter-spacing: -0.5px; }
+  .admin-title span { color: var(--teal); }
+
+  /* Realtime indicator */
+  .realtime-dot {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; color: var(--teal);
+    background: var(--teal-pale); padding: 4px 10px; border-radius: 20px;
+  }
+  .realtime-dot::before {
+    content: ''; display: inline-block; width: 8px; height: 8px;
+    background: var(--teal); border-radius: 50%;
+    animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.7); }
+  }
+
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .stat-card { background: var(--white); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); }
+  .stat-card .stat-lbl { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; color: var(--gray-400); margin-bottom: 6px; }
+  .stat-card .stat-val { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 700; color: var(--navy); }
+  .stat-card .stat-sub { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+
+  .filters-bar { background: var(--white); border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); margin-bottom: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .filter-lbl { font-size: 12px; font-weight: 700; color: var(--gray-600); white-space: nowrap; }
+  .filter-select { border: 1.5px solid var(--gray-200); border-radius: 8px; padding: 7px 12px; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--gray-800); background: var(--gray-50); cursor: pointer; outline: none; transition: border 0.2s; }
+  .filter-select:focus { border-color: var(--teal); }
+  .btn-clear-all { margin-left: auto; background: var(--red-soft); border: none; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--red); padding: 7px 14px; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+  .btn-clear-all:hover { background: var(--red); color: #fff; }
+
+  .orders-table-wrap { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 24px; }
+  .orders-table { width: 100%; border-collapse: collapse; }
+  .orders-table thead tr { background: var(--navy); }
+  .orders-table thead th { padding: 14px 16px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; color: rgba(255,255,255,0.7); user-select: none; white-space: nowrap; }
+  .orders-table tbody tr { border-bottom: 1px solid var(--gray-100); transition: background 0.15s; }
+  .orders-table tbody tr:hover { background: var(--gray-50); }
+  .orders-table tbody tr:last-child { border-bottom: none; }
+  .orders-table td { padding: 12px 16px; font-size: 13px; vertical-align: middle; }
+  .td-time { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--gray-400); }
+  .td-name { font-weight: 700; color: var(--gray-800); }
+  .td-id { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--gray-600); }
+  .td-items { max-width: 260px; }
+  .item-chip { display: inline-block; background: var(--teal-pale); color: var(--teal); border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 600; margin: 2px 2px 2px 0; white-space: nowrap; }
+  .td-total { font-family: 'DM Mono', monospace; font-weight: 700; font-size: 15px; color: var(--teal); white-space: nowrap; }
+  .td-action { text-align: right; }
+  .btn-del { background: var(--red-soft); border: none; color: var(--red); font-family: inherit; font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 7px; cursor: pointer; transition: all 0.15s; }
+  .btn-del:hover { background: var(--red); color: #fff; }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--gray-400); }
+  .empty-state .big { font-size: 36px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; font-weight: 500; }
+
+  .product-summary { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 24px; }
+  .product-summary h3 { font-size: 14px; font-weight: 800; color: var(--navy); margin-bottom: 14px; letter-spacing: -0.2px; }
+  .product-summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .ps-item { background: var(--gray-50); border-radius: 10px; padding: 12px; border-left: 3px solid var(--teal); }
+  .ps-name { font-size: 13px; font-weight: 700; color: var(--gray-800); margin-bottom: 4px; }
+  .ps-count { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 700; color: var(--teal); }
+  .ps-unit { font-size: 11px; color: var(--gray-400); }
+
+  .settings-section { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 24px; }
+  .settings-section h3 { font-size: 14px; font-weight: 800; color: var(--navy); margin-bottom: 16px; }
+  .settings-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--gray-100); flex-wrap: wrap; }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row .sr-name { flex: 1; min-width: 120px; font-size: 14px; font-weight: 600; color: var(--gray-800); }
+  .settings-row .sr-input { width: 100px; border: 1.5px solid var(--gray-200); border-radius: 8px; padding: 7px 10px; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; text-align: right; color: var(--navy); outline: none; transition: border 0.2s; }
+  .settings-row .sr-input:focus { border-color: var(--teal); }
+  .account-settings .sr-input { width: 180px; text-align: left; font-family: inherit; }
+  .btn-save-settings { background: var(--teal); border: none; color: #fff; font-family: inherit; font-size: 13px; font-weight: 700; padding: 9px 20px; border-radius: 9px; cursor: pointer; transition: background 0.2s; margin-top: 14px; }
+  .btn-save-settings:hover { background: var(--navy); }
+
+  .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 60%, var(--teal) 100%); padding: 20px; }
+  .login-box { background: var(--white); border-radius: 20px; padding: 40px 36px; max-width: 360px; width: 100%; box-shadow: var(--shadow-lg); }
+  .login-box h2 { font-size: 22px; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
+  .login-box p { font-size: 13px; color: var(--gray-400); margin-bottom: 28px; }
+  .login-input { width: 100%; border: 1.5px solid var(--gray-200); border-radius: 10px; padding: 13px 16px; font-family: inherit; font-size: 15px; font-weight: 500; color: var(--gray-800); background: var(--gray-50); outline: none; margin-bottom: 14px; transition: border 0.2s; }
+  .login-input:focus { border-color: var(--teal); background: #fff; }
+  .btn-login { width: 100%; background: var(--teal); border: none; color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; padding: 14px; border-radius: 12px; cursor: pointer; transition: background 0.2s; }
+  .btn-login:hover { background: var(--navy); }
+  .login-err { color: var(--red); font-size: 13px; text-align: center; margin-top: 10px; }
+  .badge-new { background: var(--accent); color: var(--navy); font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 10px; margin-left: 6px; letter-spacing: 0.3px; }
+
+  /* Firebase config notice */
+  .config-notice {
+    background: #fff3cd; border: 1.5px solid #ffc107; border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 16px; font-size: 13px; color: #856404; line-height: 1.6;
+  }
+  .config-notice strong { display: block; margin-bottom: 4px; }
+
+  @media (max-width: 500px) {
+    .input-row { grid-template-columns: 1fr; }
+    .product-grid { grid-template-columns: 1fr 1fr; }
+    .admin-title { font-size: 18px; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .orders-table { font-size: 12px; }
+    .orders-table td { padding: 10px 10px; }
+    .login-box { padding: 28px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Global Loading -->
+<div id="global-loading">
+  <div class="spinner"></div>
+  <p>Firebase 연결 중...</p>
+</div>
+
+<!-- ============ STUDENT VIEW ============ -->
+<div id="view-student" class="view active">
+  <div class="topbar">
+    <div class="topbar-logo">
+      <span>계명대 약학대학 편의점</span>
+      <span class="pill">PHARM</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn-ghost" onclick="goAdmin()">관리자</button>
+    </div>
+  </div>
+  <div class="student-container">
+    <div class="info-card">
+      <div class="section-label">필수 정보</div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>이름</label>
+          <input type="text" id="inp-name" placeholder="홍길동" />
+        </div>
+        <div class="input-group">
+          <label>학번</label>
+          <input type="text" id="inp-id" placeholder="26" />
+        </div>
+      </div>
+    </div>
+    <div class="section-label">상품 선택</div>
+    <div class="category-tabs" id="cat-tabs"></div>
+    <div class="product-grid" id="product-grid"></div>
+  </div>
+  <div class="cart-footer">
+    <div class="cart-footer-inner">
+      <div class="cart-total-info">
+        <span class="cart-total-label">TOTAL</span>
+        <span class="cart-total-amount" id="cart-total-display">0 원</span>
+      </div>
+      <button class="btn-submit" id="btn-submit-order" onclick="submitOrder()" disabled>
+        주문 확인 및 결제
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ADMIN LOGIN VIEW ============ -->
+<div id="view-admin-login" class="view">
+  <div class="login-wrap">
+    <div class="login-box">
+      <h2>관리자 로그인</h2>
+      <p>계명대 약학대학 편의점 관리자 전용</p>
+      <input class="login-input" type="password" id="admin-pw-input" placeholder="비밀번호 입력"
+        onkeydown="if(event.key==='Enter')checkAdminLogin()" />
+      <button class="btn-login" onclick="checkAdminLogin()">로그인</button>
+      <div class="login-err" id="login-err"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ADMIN DASHBOARD VIEW ============ -->
+<div id="view-admin" class="view">
+  <div class="topbar">
+    <div class="topbar-logo">
+      <span>관리자 대시보드</span>
+      <span class="pill">ADMIN</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn-ghost" onclick="showView('view-student')">학생 화면</button>
+      <button class="btn-ghost" onclick="adminLogout()">로그아웃</button>
+    </div>
+  </div>
+  <div class="admin-container">
+    <div class="admin-header">
+      <div>
+        <div class="admin-title">주문 현황 <span id="admin-new-badge"></span></div>
+        <div style="margin-top:6px"><span class="realtime-dot">실시간 자동 갱신</span></div>
+      </div>
+      <button class="btn-clear-all" onclick="clearAllOrders()">전체 삭제</button>
+    </div>
+
+    <div class="stats-row" id="stats-row"></div>
+
+    <div class="product-summary" id="product-summary-wrap">
+      <h3>상품별 주문 합계</h3>
+      <div class="product-summary-grid" id="product-summary-grid"></div>
+    </div>
+
+    <div class="filters-bar">
+      <span class="filter-lbl">정렬 기준:</span>
+      <select class="filter-select" id="sort-select" onchange="applyFiltersAndRender()">
+        <option value="time-desc">최신 순</option>
+        <option value="time-asc">오래된 순</option>
+        <option value="total-desc">금액 높은 순</option>
+        <option value="total-asc">금액 낮은 순</option>
+        <option value="name-asc">이름 순</option>
+      </select>
+      <span class="filter-lbl" style="margin-left:8px">상품 필터:</span>
+      <select class="filter-select" id="product-filter-select" onchange="applyFiltersAndRender()">
+        <option value="">전체 상품</option>
+      </select>
+      <span class="filter-lbl" style="margin-left:8px">카테고리:</span>
+      <select class="filter-select" id="cat-filter-select" onchange="applyFiltersAndRender()">
+        <option value="">전체 카테고리</option>
+      </select>
+    </div>
+
+    <div class="orders-table-wrap">
+      <table class="orders-table">
+        <thead>
+          <tr>
+            <th>시간</th>
+            <th>이름</th>
+            <th>학번</th>
+            <th>주문 상품</th>
+            <th>총액</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="orders-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="settings-section">
+      <h3>계좌 정보 설정</h3>
+      <div class="account-settings">
+        <div class="settings-row">
+          <span class="sr-name">은행</span>
+          <input class="sr-input" type="text" id="set-bank" placeholder="카카오뱅크" />
+        </div>
+        <div class="settings-row">
+          <span class="sr-name">계좌번호</span>
+          <input class="sr-input" type="text" id="set-account" placeholder="0000-00-0000000" />
+        </div>
+        <div class="settings-row">
+          <span class="sr-name">예금주</span>
+          <input class="sr-input" type="text" id="set-holder" placeholder="홍길동" />
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--gray-400);margin-top:10px;line-height:1.6">
+        * "토스로 송금하기" 버튼은 위 은행/계좌번호/금액 정보를 이용해 자동으로 생성됩니다. 토스 앱이 설치된 기기에서만 동작하며, 비공식 딥링크라 예고 없이 동작이 바뀔 수 있습니다.
+      </p>
+      <button class="btn-save-settings" onclick="saveAccountSettings()">저장</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>상품 가격 설정</h3>
+      <div id="price-settings-list"></div>
+      <button class="btn-save-settings" onclick="savePriceSettings()">가격 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ORDER CONFIRM MODAL ============ -->
+<div class="modal-overlay" id="order-modal">
+  <div class="modal-box" id="modal-inner">
+    <div id="modal-content-area"></div>
+  </div>
+</div>
+
+<!-- Firebase SDK (compat v9) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+// =====================================================================
+//  STEP 1: Firebase 프로젝트 설정값으로 교체하세요
+//  Firebase Console > 프로젝트 설정 > 웹앱 > firebaseConfig 복사
+// =====================================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyC9a73lK6aOBLr4OfirwCpDQafFaqtbC2o",
+  authDomain: "kmupharmstore.firebaseapp.com",
+  projectId: "kmupharmstore",
+  storageBucket: "kmupharmstore.firebasestorage.app",
+  messagingSenderId: "543296541721",
+  appId: "1:543296541721:web:42b7be51a66846b4e98688",
+  measurementId: "G-BR8Q0TL1M2"
+};
+// =====================================================================
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ========= CONSTANTS =========
+const ADMIN_PW = 'kmupharmstore';
+
+const DEFAULT_PRODUCTS = [
+  // 식품
+  { id: 'p26', name: '고구마말랭이', category: '식품', price: 1700 },
+  { id: 'p11', name: '단백질 쉐이크', category: '식품', price: 3200 },
+  { id: 'p05', name: '불닭볶음면', category: '식품', price: 1200 },
+  { id: 'p04', name: '육개장 사발면', category: '식품', price: 900 },
+  { id: 'p03', name: '제육 컵밥', category: '식품', price: 2400 },
+  { id: 'p02', name: '참치마요 컵밥', category: '식품', price: 2300 },
+
+  // 과자/간식
+  { id: 'p12', name: '감자알칩', category: '과자/간식', price: 600 },
+  { id: 'p06', name: '단백질바', category: '과자/간식', price: 800 },
+  { id: 'p01', name: '단백질칩', category: '과자/간식', price: 1300 },
+  { id: 'p07', name: '마이구미', category: '과자/간식', price: 700 },
+  { id: 'p14', name: '메추리알', category: '과자/간식', price: 700 },
+  { id: 'p15', name: '쌀과자', category: '과자/간식', price: 200 },
+  { id: 'p25', name: '에이스', category: '과자/간식', price: 300 },
+  { id: 'p24', name: '오레오', category: '과자/간식', price: 500 },
+  { id: 'p08', name: '제로 초코쿠키', category: '과자/간식', price: 300 },
+  { id: 'p13', name: '카스타드', category: '과자/간식', price: 300 },
+
+  // 음료
+  { id: 'p09', name: '아몬드 브리즈 오리지널', category: '음료', price: 600 },
+  { id: 'p10', name: '아몬드 브리즈 초코', category: '음료', price: 700 },
+
+  // 커피
+  { id: 'p20', name: '캡슐 기본', category: '커피', price: 600 },
+  { id: 'p19', name: '캡슐 디카페인', category: '커피', price: 600 },
+  { id: 'p18', name: '캡슐 바닐라', category: '커피', price: 600 },
+  { id: 'p17', name: '커피스틱', category: '커피', price: 200 },
+
+  // 기타
+  { id: 'p23', name: '컴퓨터용 사인펜', category: '기타', price: 200 },
+  { id: 'p21', name: '컵', category: '기타', price: 50 },
+  { id: 'p22', name: '투명 우산', category: '기타', price: 2000 },
+];
+
+const CATEGORIES = ['전체', '식품', '과자/간식', '음료', '커피', '기타'];
+
+// ========= GLOBAL STATE =========
+let products = [];
+let allOrders = []; // 실시간 리스너로 채워짐
+let cart = {};
+let selectedCategory = '전체';
+let ordersUnsubscribe = null; // 실시간 리스너 해제 함수
+
+// ========= FIREBASE HELPERS =========
+
+// 상품 목록 로드 (Firestore → 없으면 기본값 업로드)
+async function loadProducts() {
+  const snap = await db.collection('products').get();
+  if (snap.empty) {
+    // 최초 실행: 기본 상품 Firestore에 업로드
+    const batch = db.batch();
+    DEFAULT_PRODUCTS.forEach(p => {
+      batch.set(db.collection('products').doc(p.id), p);
+    });
+    await batch.commit();
+    return JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+  }
+  return snap.docs.map(d => d.data());
+}
+
+// 상품 가격 저장
+async function saveProductsToDb(prods) {
+  const batch = db.batch();
+  prods.forEach(p => {
+    batch.set(db.collection('products').doc(p.id), p);
+  });
+  await batch.commit();
+}
+
+// 주문 추가
+async function addOrderToDb(orderData) {
+  await db.collection('orders').add(orderData);
+}
+
+// 주문 삭제
+async function deleteOrderFromDb(docId) {
+  await db.collection('orders').doc(docId).delete();
+}
+
+// 전체 주문 삭제
+async function clearAllOrdersFromDb() {
+  const snap = await db.collection('orders').get();
+  const batch = db.batch();
+  snap.docs.forEach(d => batch.delete(d.ref));
+  await batch.commit();
+}
+
+// 계좌 설정 로드
+async function loadAccountSettings() {
+  const doc = await db.collection('settings').doc('account').get();
+  return doc.exists ? doc.data() : { bank: '', account: '', holder: '' };
+}
+
+// 계좌 설정 저장
+async function saveAccountSettingsToDb(data) {
+  await db.collection('settings').doc('account').set(data);
+}
+
+// 실시간 주문 리스너 등록 (관리자 대시보드용)
+function subscribeOrders(callback) {
+  return db.collection('orders')
+    .orderBy('timestamp', 'desc')
+    .onSnapshot(snap => {
+      allOrders = snap.docs.map(d => ({ _docId: d.id, ...d.data() }));
+      callback(allOrders);
+    });
+}
+
+// ========= LOADING =========
+function showLoading(msg) {
+  const el = document.getElementById('global-loading');
+  el.querySelector('p').textContent = msg || 'Firebase 연결 중...';
+  el.classList.remove('hidden');
+}
+function hideLoading() {
+  document.getElementById('global-loading').classList.add('hidden');
+}
+
+// ========= VIEW MANAGEMENT =========
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  // 관리자 화면 벗어나면 리스너 해제
+  if (id !== 'view-admin' && ordersUnsubscribe) {
+    ordersUnsubscribe();
+    ordersUnsubscribe = null;
+  }
+}
+
+function goAdmin() {
+  showView('view-admin-login');
+  document.getElementById('admin-pw-input').value = '';
+  document.getElementById('login-err').textContent = '';
+}
+
+function checkAdminLogin() {
+  const pw = document.getElementById('admin-pw-input').value;
+  if (pw === ADMIN_PW) {
+    showView('view-admin');
+    initAdminDashboard();
+  } else {
+    document.getElementById('login-err').textContent = '비밀번호가 틀렸습니다.';
+  }
+}
+
+function adminLogout() {
+  if (ordersUnsubscribe) {
+    ordersUnsubscribe();
+    ordersUnsubscribe = null;
+  }
+  showView('view-student');
+}
+
+// ========= STUDENT UI =========
+function initStudent() {
+  selectedCategory = '전체';
+  renderCategoryTabs();
+  renderProductGrid('전체');
+  cart = {};
+  updateCartDisplay();
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-id').value = '';
+}
+
+function renderCategoryTabs() {
+  const container = document.getElementById('cat-tabs');
+  container.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-tab' + (cat === selectedCategory ? ' active' : '');
+    btn.textContent = cat;
+    btn.onclick = () => {
+      selectedCategory = cat;
+      document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderProductGrid(cat);
+    };
+    container.appendChild(btn);
+  });
+}
+
+function renderProductGrid(cat) {
+  const grid = document.getElementById('product-grid');
+  grid.innerHTML = '';
+  const filtered = cat === '전체' ? products : products.filter(p => p.category === cat);
+  filtered.forEach(p => {
+    const qty = cart[p.id] || 0;
+    const card = document.createElement('div');
+    card.className = 'product-card' + (qty > 0 ? ' selected' : '');
+    card.id = 'card-' + p.id;
+    card.innerHTML = `
+      <div class="product-cat-badge">${p.category}</div>
+      <div class="product-name">${p.name}</div>
+      <div class="product-price">${p.price.toLocaleString()} 원</div>
+      ${qty > 0 ? `
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty('${p.id}', -1, event)">-</button>
+          <span class="qty-num" id="qty-${p.id}">${qty}</span>
+          <button class="qty-btn" onclick="changeQty('${p.id}', 1, event)">+</button>
+        </div>` : ''}
+    `;
+    card.onclick = (e) => {
+      if (e.target.classList.contains('qty-btn')) return;
+      if (!cart[p.id]) {
+        cart[p.id] = 1;
+        refreshCard(p.id);
+        updateCartDisplay();
+      }
+    };
+    grid.appendChild(card);
+  });
+}
+
+function changeQty(pid, delta, e) {
+  e.stopPropagation();
+  cart[pid] = (cart[pid] || 0) + delta;
+  if (cart[pid] <= 0) delete cart[pid];
+  refreshCard(pid);
+  updateCartDisplay();
+}
+
+function refreshCard(pid) {
+  const cat = selectedCategory;
+  const filtered = cat === '전체' ? products : products.filter(p => p.category === cat);
+  const p = products.find(x => x.id === pid);
+  if (!p) return;
+  if (!filtered.find(x => x.id === pid)) return;
+  const card = document.getElementById('card-' + pid);
+  if (!card) return;
+  const qty = cart[pid] || 0;
+  card.className = 'product-card' + (qty > 0 ? ' selected' : '');
+  let qtyBlock = card.querySelector('.qty-control');
+  if (qty > 0) {
+    if (!qtyBlock) { qtyBlock = document.createElement('div'); qtyBlock.className = 'qty-control'; card.appendChild(qtyBlock); }
+    qtyBlock.innerHTML = `
+      <button class="qty-btn" onclick="changeQty('${pid}', -1, event)">-</button>
+      <span class="qty-num" id="qty-${pid}">${qty}</span>
+      <button class="qty-btn" onclick="changeQty('${pid}', 1, event)">+</button>
+    `;
+  } else {
+    if (qtyBlock) qtyBlock.remove();
+  }
+}
+
+function calcTotal() {
+  let total = 0;
+  for (const [pid, qty] of Object.entries(cart)) {
+    const p = products.find(x => x.id === pid);
+    if (p) total += p.price * qty;
+  }
+  return total;
+}
+
+function updateCartDisplay() {
+  const total = calcTotal();
+  document.getElementById('cart-total-display').textContent = total.toLocaleString() + ' 원';
+  document.getElementById('btn-submit-order').disabled = Object.keys(cart).length === 0;
+}
+
+async function submitOrder() {
+  const name = document.getElementById('inp-name').value.trim();
+  const sid  = document.getElementById('inp-id').value.trim();
+  if (!name) { alert('이름을 입력해주세요.'); return; }
+  if (!sid)  { alert('학번을 입력해주세요.'); return; }
+  if (Object.keys(cart).length === 0) { alert('상품을 선택해주세요.'); return; }
+
+  const items = Object.entries(cart).map(([pid, qty]) => {
+    const p = products.find(x => x.id === pid);
+    return { id: pid, name: p.name, price: p.price, qty };
+  });
+  const total = calcTotal();
+
+  const summaryHTML = items.map(it => `
+    <div class="order-summary-item">
+      <div><span class="item-name">${it.name}</span><span class="item-qty">x${it.qty}</span></div>
+      <div class="item-subtotal">${(it.price * it.qty).toLocaleString()} 원</div>
+    </div>
+  `).join('');
+
+  document.getElementById('modal-content-area').innerHTML = `
+    <div class="modal-title">주문 확인</div>
+    <div class="modal-sub">${name}(${sid})님의 주문 내역</div>
+    <div class="order-summary-list">${summaryHTML}</div>
+    <div class="total-final">
+      <span class="lbl">최종 결제 금액</span>
+      <span class="amt">${total.toLocaleString()} 원</span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">취소</button>
+      <button class="btn-confirm" id="btn-final-confirm" onclick="confirmOrder('${name}','${sid}')">주문 제출</button>
+    </div>
+  `;
+  document.getElementById('order-modal').classList.add('open');
+}
+
+async function confirmOrder(name, sid) {
+  const btn = document.getElementById('btn-final-confirm');
+  if (btn) btn.disabled = true;
+
+  const items = Object.entries(cart).map(([pid, qty]) => {
+    const p = products.find(x => x.id === pid);
+    return { id: pid, name: p.name, price: p.price, qty };
+  });
+  const total = calcTotal();
+
+  showLoading('주문 저장 중...');
+  try {
+    await addOrderToDb({
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      time: new Date().toLocaleString('ko-KR'),
+      name, sid, items, total
+    });
+    const acc = await loadAccountSettings();
+    hideLoading();
+    document.getElementById('modal-content-area').innerHTML = `
+      <div class="success-screen">
+        <div class="success-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#0d7a6b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <div class="success-title">주문 완료!</div>
+        <div class="success-sub" style="margin-bottom:16px">
+          ${name}님의 주문이 접수되었습니다.<br>
+          아래 계좌로 이체 후 상품을 가져가세요!
+        </div>
+        <div class="account-box" style="text-align:left">
+          <div class="account-label">이체 계좌</div>
+          <div class="account-bank">${acc.bank || '카카오뱅크'}</div>
+          <div class="account-number">${acc.account || '3333-35-9544065'}</div>
+          <div class="account-holder">${acc.holder || '우민서'}</div>
+        </div>
+        <button type="button" class="btn-confirm" style="width:100%;background:#0064FF;color:#fff;margin-bottom:14px"
+          onclick="window.location.href='${buildTossLink(acc.bank || '카카오뱅크', acc.account || '3333-35-9544065', total)}'">
+          토스로 송금하기
+        </button>
+        <div class="total-final">
+          <span class="lbl">이체 금액</span>
+          <span class="amt">${total.toLocaleString()} 원</span>
+        </div>
+        <button class="btn-confirm" style="width:100%" onclick="closeModalAndReset()">확인</button>
+      </div>
+    `;
+  } catch(err) {
+    hideLoading();
+    alert('주문 저장 실패: ' + err.message);
+    if (btn) btn.disabled = false;
+  }
+}
+
+// 토스 송금 딥링크 생성 (비공식 URL 스킴: supertoss://send)
+function buildTossLink(bank, account, amount) {
+  const params = new URLSearchParams();
+  params.append('bank', bank);
+  params.append('accountNo', String(account).replace(/-/g, ''));
+  params.append('amount', String(amount));
+  return `supertoss://send?${params.toString()}`;
+}
+
+function closeModal() {
+  document.getElementById('order-modal').classList.remove('open');
+}
+
+function closeModalAndReset() {
+  closeModal();
+  cart = {};
+  initStudent();
+}
+
+// ========= ADMIN DASHBOARD =========
+async function initAdminDashboard() {
+  showLoading('주문 데이터 불러오는 중...');
+  try {
+    await renderAccountSettingsForm();
+    renderPriceSettings();
+    renderProductFilter();
+    renderCatFilter();
+    // 실시간 리스너 등록
+    if (ordersUnsubscribe) ordersUnsubscribe(); // 기존 리스너 해제
+    ordersUnsubscribe = subscribeOrders((orders) => {
+      allOrders = orders;
+      renderAdminStats(orders);
+      renderProductSummary(orders);
+      applyFiltersAndRender();
+    });
+    hideLoading();
+  } catch(err) {
+    hideLoading();
+    alert('데이터 로드 실패: ' + err.message);
+  }
+}
+
+function renderAdminStats(orders) {
+  const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
+  const totalItems = orders.reduce((s, o) => s + o.items.reduce((ss, it) => ss + it.qty, 0), 0);
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-lbl">TOTAL ORDERS</div>
+      <div class="stat-val">${orders.length}</div>
+      <div class="stat-sub">건</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-lbl">TOTAL REVENUE</div>
+      <div class="stat-val">${(totalRevenue/10000).toFixed(1)}</div>
+      <div class="stat-sub">만 원 (${totalRevenue.toLocaleString()} 원)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-lbl">TOTAL ITEMS</div>
+      <div class="stat-val">${totalItems}</div>
+      <div class="stat-sub">개</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-lbl">AVG ORDER</div>
+      <div class="stat-val">${orders.length ? Math.round(totalRevenue/orders.length).toLocaleString() : '0'}</div>
+      <div class="stat-sub">원/건</div>
+    </div>
+  `;
+  const badge = document.getElementById('admin-new-badge');
+  badge.innerHTML = orders.length > 0 ? `<span class="badge-new">${orders.length}</span>` : '';
+}
+
+function renderProductSummary(orders) {
+  const counts = {};
+  orders.forEach(o => o.items.forEach(it => {
+    counts[it.name] = (counts[it.name] || 0) + it.qty;
+  }));
+  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+  const grid = document.getElementById('product-summary-grid');
+  if (sorted.length === 0) {
+    grid.innerHTML = '<div style="color:var(--gray-400);font-size:13px">아직 주문이 없습니다.</div>';
+    return;
+  }
+  grid.innerHTML = sorted.map(([name, cnt]) => `
+    <div class="ps-item">
+      <div class="ps-name">${name}</div>
+      <div class="ps-count">${cnt}<span class="ps-unit"> 개</span></div>
+    </div>
+  `).join('');
+}
+
+function renderProductFilter() {
+  const sel = document.getElementById('product-filter-select');
+  sel.innerHTML = '<option value="">전체 상품</option>';
+  products.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.name; opt.textContent = p.name;
+    sel.appendChild(opt);
+  });
+}
+
+function renderCatFilter() {
+  const sel = document.getElementById('cat-filter-select');
+  sel.innerHTML = '<option value="">전체 카테고리</option>';
+  CATEGORIES.filter(c => c !== '전체').forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    sel.appendChild(opt);
+  });
+}
+
+function applyFiltersAndRender() {
+  let orders = [...allOrders];
+  const sortVal = document.getElementById('sort-select').value;
+  const prodFilter = document.getElementById('product-filter-select').value;
+  const catFilter = document.getElementById('cat-filter-select').value;
+
+  if (prodFilter) orders = orders.filter(o => o.items.some(it => it.name === prodFilter));
+  if (catFilter) {
+    const names = products.filter(p => p.category === catFilter).map(p => p.name);
+    orders = orders.filter(o => o.items.some(it => names.includes(it.name)));
+  }
+
+  orders.sort((a, b) => {
+    if (sortVal === 'time-asc')   return (a.timestamp?.seconds||0) - (b.timestamp?.seconds||0);
+    if (sortVal === 'time-desc')  return (b.timestamp?.seconds||0) - (a.timestamp?.seconds||0);
+    if (sortVal === 'total-desc') return b.total - a.total;
+    if (sortVal === 'total-asc')  return a.total - b.total;
+    if (sortVal === 'name-asc')   return a.name.localeCompare(b.name, 'ko');
+    return (b.timestamp?.seconds||0) - (a.timestamp?.seconds||0);
+  });
+
+  renderOrdersTable(orders);
+}
+
+function renderOrdersTable(orders) {
+  const tbody = document.getElementById('orders-tbody');
+  if (orders.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6">
+      <div class="empty-state">
+        <div class="big">--</div>
+        <p>표시할 주문이 없습니다.</p>
+      </div>
+    </td></tr>`;
+    return;
+  }
+  tbody.innerHTML = orders.map(o => {
+    const chips = o.items.map(it => `<span class="item-chip">${it.name} x${it.qty}</span>`).join('');
+    return `
+      <tr>
+        <td class="td-time">${o.time || ''}</td>
+        <td class="td-name">${o.name}</td>
+        <td class="td-id">${o.sid}</td>
+        <td class="td-items">${chips}</td>
+        <td class="td-total">${o.total.toLocaleString()} 원</td>
+        <td class="td-action">
+          <button class="btn-del" onclick="deleteOrder('${o._docId}')">삭제</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function deleteOrder(docId) {
+  if (!confirm('이 주문을 삭제하시겠습니까?')) return;
+  showLoading('삭제 중...');
+  try {
+    await deleteOrderFromDb(docId);
+    hideLoading();
+    // 리스너가 자동으로 화면 갱신
+  } catch(err) {
+    hideLoading();
+    alert('삭제 실패: ' + err.message);
+  }
+}
+
+async function clearAllOrders() {
+  if (!confirm('모든 주문을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
+  showLoading('전체 삭제 중...');
+  try {
+    await clearAllOrdersFromDb();
+    hideLoading();
+  } catch(err) {
+    hideLoading();
+    alert('삭제 실패: ' + err.message);
+  }
+}
+
+// ========= PRICE SETTINGS =========
+function renderPriceSettings() {
+  const list = document.getElementById('price-settings-list');
+  list.innerHTML = '';
+  products.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'settings-row';
+    row.innerHTML = `
+      <span class="sr-name">${p.name} <small style="color:var(--gray-400);font-size:11px">${p.category}</small></span>
+      <input class="sr-input" type="number" id="price-${p.id}" value="${p.price}" min="0" step="100" />
+      <span style="font-size:12px;color:var(--gray-400)">원</span>
+    `;
+    list.appendChild(row);
+  });
+}
+
+async function savePriceSettings() {
+  products.forEach(p => {
+    const inp = document.getElementById('price-' + p.id);
+    if (inp) p.price = parseInt(inp.value) || 0;
+  });
+  showLoading('가격 저장 중...');
+  try {
+    await saveProductsToDb(products);
+    hideLoading();
+    alert('가격이 저장되었습니다.');
+  } catch(err) {
+    hideLoading();
+    alert('저장 실패: ' + err.message);
+  }
+}
+
+// ========= ACCOUNT SETTINGS =========
+async function renderAccountSettingsForm() {
+  const acc = await loadAccountSettings();
+  document.getElementById('set-bank').value = acc.bank || '';
+  document.getElementById('set-account').value = acc.account || '';
+  document.getElementById('set-holder').value = acc.holder || '';
+}
+
+async function saveAccountSettings() {
+  showLoading('계좌 정보 저장 중...');
+  try {
+    await saveAccountSettingsToDb({
+      bank:    document.getElementById('set-bank').value,
+      account: document.getElementById('set-account').value,
+      holder:  document.getElementById('set-holder').value,
+    });
+    hideLoading();
+    alert('계좌 정보가 저장되었습니다.');
+  } catch(err) {
+    hideLoading();
+    alert('저장 실패: ' + err.message);
+  }
+}
+
+// ========= APP INIT =========
+async function appInit() {
+  showLoading('앱 초기화 중...');
+  try {
+    products = await loadProducts();
+    hideLoading();
+    initStudent();
+  } catch(err) {
+    hideLoading();
+    document.body.innerHTML = `
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;font-family:sans-serif;text-align:center;">
+        <div>
+          <div style="font-size:40px;margin-bottom:16px">!</div>
+          <div style="font-size:18px;font-weight:700;color:#0f2d4a;margin-bottom:8px">Firebase 연결 실패</div>
+          <div style="font-size:13px;color:#4a6272;max-width:360px;line-height:1.7;">
+            firebaseConfig 값을 올바르게 입력했는지 확인해주세요.<br>
+            Firestore 규칙이 테스트 모드인지도 확인하세요.<br><br>
+            <code style="font-size:11px;background:#f0f4f6;padding:4px 8px;border-radius:6px">${err.message}</code>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+appInit();
+</script>
+</body>
+</html>
